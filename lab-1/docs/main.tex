@@ -1,0 +1,236 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{shorttoc}
+\usepackage{cmap}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\graphicspath{{./images/}}
+
+\definecolor{linkcolor}{HTML}{000000}
+\definecolor{urlcolor}{HTML}{0085FF}
+\hypersetup{pdfstartview=FitH,
+  linkcolor=linkcolor,
+  urlcolor=urlcolor,
+colorlinks=true}
+
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+\renewcommand*\contentsname{Содержание}
+
+\newcommand{\plot}[3]{
+  \begin{figure}[H]
+    \begin{center}
+      \includegraphics[scale=0.6]{#1}
+      \caption{#2}
+      \label{#3}
+    \end{center}
+  \end{figure}
+}
+
+\newcommand{\GoBackN}{``Go-Back-N''}
+\newcommand{\SelectiveRepeat}{``Selective Repeat''}
+
+\begin{document}
+\include{title}
+\newpage
+
+\tableofcontents
+\listoffigures
+\newpage
+
+\section{Постановка задачи}
+\quad Имеется две вещественные выборки.
+Необходимо на их основе построить две интервальные выборки $ X_{1}, X_{2} $.
+Рассматриваются 4 меры совместности интервальных данных: индекс Жаккара,
+частота моды, оптимальный корректирующий множитель в методе центра
+неопределённости, мультипликативная мера.
+Каждую выборку необходимо оценить в отдельности с использованием
+каждой меры совместности. После, для каждой меры найти такие значения $ R $,
+которые были бы оптимальным для выборки $ X = X_{1} \cup R X_{2} $.
+
+\section{Теория}
+\subsection{Индекс Жаккара}
+\quad Индекс Жаккара (далее обозначим через $ JC $) определяет степень
+совместности двух интервалов $ x, y $.
+\begin{equation}
+  JC(x, y) = \frac{wid(x \land y)}{wid(x \lor y)}
+  \label{e:simplejaccard}
+\end{equation}
+
+Здесь $\land, \lor$ представляют собой операции взятия минимума и
+максимума по включению в полной арифметике Каухера.
+Формула \ref{e:simplejaccard} легко может быть обобщена на случай
+интервальной выборки $ X = \{x_i\}_{i=1}^{n} $.
+
+\begin{equation}
+  JC(X) = \frac{wid(\land_{i=1,n}x_i)}{wid(\lor_{i=1,n}x_i)}
+  \label{e:jaccard}
+\end{equation}
+
+\subsection{Частота моды}
+\quad Модой интервальной выборки называют совокупность интервалов
+пересечения наибольших совместных подвыборок рассматриваемой
+выборки. Наибольшая длина совместных подвыборок данной выборки называется
+частотой моды. Исследование частоты моды (обозначим далее через
+$ max\mu $) имеет смысл только для несовместных выборок.
+
+\subsection{Оптимальный корректирующий множитель в методе центра
+неопределённости}
+\quad Для обеспечения совместности выборки интервальных измерений
+применяется метод ``центра неопределенности''. Если выборка измерений
+несовместна, то путем одновременного увеличения величины неопределенности
+всех измерений в выражении можно всегда добиться того, чтобы выборка стала
+совместной.
+
+\begin{equation}
+  \overline{x_{i}^{'}} = \overline{x_{i}} + k * (\overline{x_{i}} - \underline{x_{i}})
+\end{equation}
+\begin{equation}
+  \underline{x_{i}^{'}} = \underline{x_{i}} - k * (\overline{x_{i}} - \underline{x_{i}})
+\end{equation}
+
+Оптимальным ($ k_{0} $) называется такое значение $ k $, при котором
+непустое пересечение интервальной выборки является точкой.
+
+\subsection{Мультипликативная мера}
+\quad Мультипликативная мера $ T $ учитывает степень совместности по
+нескольким функционалам качества одновременно, а ее значения находятся
+в интервале $ [0, 1] $:
+
+\begin{equation}
+  T = \prod_{i=1}^k T_i
+  \label{e:Mult}
+\end{equation}
+
+В качестве множителей берем перечисленные выше меры, нормированные в
+$ [0, 1] $:
+
+\begin{equation}
+  T_1 = \frac{1}{2} * (1 + JC)
+\end{equation}
+\begin{equation}
+  T_2 = \frac{max \mu}{n}
+\end{equation}
+\begin{equation}
+  T_3 = \frac{1}{1 + k_{0}}
+\end{equation}
+
+\subsection{Нахождение оптимального значения R}
+\quad Для поиска оптимальных значений $ R $ разумно найти первое
+приближение. Возьмем за такое приближение внешнюю оценку $ R_{out} $.
+
+\begin{equation}
+  \underline{R_{out}} = \frac{\min_{i=1,n}\underline{x_{1i}}}{\max_{i=1,n}\overline{x_{2i}}}
+\end{equation}
+\begin{equation}
+  \overline{R_{out}} = \frac{\max_{i=1,n}\overline{x_{1i}}}{\min_{i=1,n}\underline{x_{2i}}}
+\end{equation}
+
+Будем исследовать поведение $ R $ в области, заданной $ R_{out} $.
+
+\section{Реализация}
+\quad Из языка Python 3.12.2 были использованы следующие модули:
+\begin{itemize}
+  \item ``numpy'' --- генерация множества чисел;
+  \item ``matplotlib.pyplot'' --- построение и отображение графиков;
+  \item ``typing'', ``annotations'' --- строгая типизация с аннотациями;
+  \item ``os'' --- взаимодействие с ОС.
+\end{itemize}
+
+\section{Результаты}
+\quad Данные были взяты из файлов \textsl{+0\_5V/+0\_5V\_13.txt} и
+\textsl{-0\_5V/-0\_5V\_13.txt}. С коррекцией при помощи вспомогательных данных из
+файла \textsl{ZeroLine/ZeroLine\_13.txt}. Размер выборок: $ 1024 $.
+Интервальная выборка на основе изначальных строится по формулам:
+
+\begin{equation}
+  x = [x_0 - \varepsilon, x_0 + \varepsilon], \varepsilon = 2^{-14}
+\end{equation}
+где $ x_0 $ - точечное значение.
+
+Сначала посмотрим на исходные интервальные выборки $ X_1, X_2 $.
+\plot{./images/signal 1.png}{Исходная интервальная выборка $ X_1 $}{p:x1}
+
+\plot{./images/signal 2.png}{Исходная интервальная выборка $ X_2 $}{p:x2}
+
+Также построим графики частоты пересечений подынтервалов для исходных
+выборок.
+\plot{./images/signal 1 mode hist.png}{Частота пересечений подынтервалов с интервалами выборки $ X_1 $}{p:modaX1}
+
+\plot{./images/signal 2 mode hist.png}{Частота пересечений подынтервалов с интервалами выборки $ X_2 $}{p:modaX2}
+\quad Проанализируем выборки.
+
+Индекс Жаккара: $ JC(X_1) = -0.9909, JC(X_2) = -0.9911 $.
+
+Частота моды: $ max\mu(X_1) = 29, max\mu(X_2) = 26 $.
+
+Оптимальный корректирующий множитель: $ k_0(X_1) = 109.375, k_0(X_2) = 111.666 $.
+
+Мультипликативная мера: $ T(X_1) = 1.1623e^{-6}, T(X_2) = 1.0001e^{-6} $.
+
+Верхняя и нижняя границы $ \underline{R} = -1.0082, \overline{R} = -1.0065 $.
+
+Найдем оптимальные $ R $
+(для наглядности на графиках изображёны более широкии интервалы значений $ R $).
+\plot{./images/sum signal JС.png}{Зависимость $ JC $ от $ R $}{p:jaccard}
+
+Оптимальное значение $ R $ относительно $ JC $ равно $ R_{opt} = [-1.0069, -1.0065] $
+при $ JС(X) = -0.9911 $.
+\plot{./images/sum signal k.png}{Зависимость $ k_0 $ от $ R $}{p:k_0}
+
+Оптимальное значение $ R $ относительно $ k_0 $ равно $ R_{opt} = [-1.0069, -1.0067] $
+при $ k_0(X) = 111.666 $.
+\plot{./images/sum signal maxmu.png}{Зависимость частоты моды от $ R $}{p:max_mu}
+
+Оптимальное значение $ R $ относительно $ max\mu $ равно $ R_{opt} = [[-1.009, -1.0088], [-1.0078, -1.0076]] $
+при $ max\mu(X) = 55 $.
+\plot{./images/sum signal mult measure.png}{Зависимость $ T $ от $ R $}{p:t}
+
+Оптимальное значение $ R $ относительно $ T $ равно $ R_{opt} = -1.0077 $
+при $ T(X) = 1.0578e^{-6} $.
+
+Итоговая оценка совместности: $ [-1.0077, [-1.0082, -1.0065]] $.
+
+\section{Выводы}
+\quad Из полученных результатов можно заметить следующее. Из теории следует, что после совмещения двух выборок описанным образом нельзя получить более совместную выборку, чем худшая из двух
+изначальных. Это означает, что
+
+\begin{equation}
+  JС(X) \leq min(JC(X_1), JC(X_2))
+\end{equation}
+
+\begin{equation}
+  k_0(X) \geq max(k_0(X_1), k_0(X_2))
+\end{equation}
+
+\begin{equation}
+  max\mu(X) \leq max\mu(X_1) + max\mu(X_2)
+\end{equation}
+
+На практике во всех трех случаев удалось достичь равенства. Также можно заметить, что
+данное правило не распространяется на мультипликативную меру. Более того, только для
+мультипликативной меры $ R_{opt} $ задается точным числом, а не интервалом/мульти-интервалом.
+
+\section{Литература}
+\begin{itemize}
+  \item \href{https://elib.spbstu.ru/dl/2/s20-76.pdf/info}{Баженов А.Н.
+    <<Интервальный анализ. Основы теории и учебные примеры: учебное пособие>>};
+  \item \href{https://elib.spbstu.ru/dl/5/tr/2021/tr21-169.pdf/info}{Баженов
+      А.Н. <<Естественнонаучные и технические применения интервального анализа:
+    учебное пособие>>};
+  \item \href{https://github.com/AlexanderBazhenov/Students}{Баженов А.Н.
+    Репозиторий ``Students'' на GitHub};
+\end{itemize}
+
+\section{Приложения}
+\quad Исходники лабораторной работы выложены на
+\href{https://github.com/MeShootIn/interval-analysis/tree/lab-1}{GitHub}.
+
+\end{document}
