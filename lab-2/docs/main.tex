@@ -1,0 +1,157 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{shorttoc}
+\usepackage{cmap}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\graphicspath{{./images/}}
+
+\definecolor{linkcolor}{HTML}{000000}
+\definecolor{urlcolor}{HTML}{0085FF}
+\hypersetup{pdfstartview=FitH,
+  linkcolor=linkcolor,
+  urlcolor=urlcolor,
+colorlinks=true}
+
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+\renewcommand*\contentsname{Содержание}
+
+\newcommand{\plot}[3]{
+  \begin{figure}[H]
+    \begin{center}
+      \includegraphics[scale=0.6]{#1}
+      \caption{#2}
+      \label{#3}
+    \end{center}
+  \end{figure}
+}
+
+\begin{document}
+\include{title}
+\newpage
+
+\tableofcontents
+\listoffigures
+\newpage
+
+\section{Постановка задачи}
+\quad Имеется выборка $ (X, (Y)) $. $ X $ -- множество вещественных чисел,
+$ Y $ -- множество интервалов. Необходимо восстановить функциональную зависимость.
+
+\section{Теория}
+\quad Для выборки $ (X, (Y))$, $ X = \{x_i\}_{i=1}^{n}, {Y} = \{{y}_i\}_{i=1}^{n} $
+($ x_i $ - точеный, $ {y}_i $ - интервальный) линейная регрессионная модель имеет вид:
+
+\begin{equation}
+  y = \beta_0 + \beta_1 x
+  \label{e:model}
+\end{equation}
+
+Для оценки параметров необходимо решить систему вида:
+
+\begin{equation}
+  \begin{gathered}
+    \underline{y_i} \leq  y = \beta_0 + \beta_1 x_i \leq \overline{y_i} \\
+    i = 1..n
+  \end{gathered}
+\end{equation}
+
+С учетом применения метода вариации неопределенности имеем задачу минимизации:
+
+\begin{equation}
+  \begin{gathered}
+    \sum_{i = 1}^{n}w_{i} \to \min \\
+    \text{mid}{y}_{i} - w_{i} \text{rad}{y}_{i} \leq \beta_0 + \beta_1 x_i \leq \text{mid}{y}_{i} + w_{i} \text{rad}{y}_{i} \\
+    w_{i} \geq 0, i = 1..n \\
+  \end{gathered}
+\end{equation}
+
+\quad Информационным множеством называется множество всех значений параметров
+$ \beta_0, \beta_1 $, удовлетворяющих \ref{e:model}. Минимальные и максимальные значения
+параметров в информационном множестве определяют внешнюю оценку параметров модели.
+
+\quad Коридором совместных зависимостей называется множетсво всех модельных функций
+совместных с исходными данными.
+
+\section{Реализация}
+\quad Из языка Python 3.12.2 были использованы следующие модули:
+\begin{itemize}
+  \item ``numpy'' --- генерация множества чисел;
+  \item ``matplotlib.pyplot'' --- построение и отображение графиков;
+  \item ``scipy'' --- для выполнения научных и инженерных расчётов.
+\end{itemize}
+
+\section{Результаты}
+\quad Данные были взяты из файлов \textsl{-0\_25V/-0\_25V\_13.txt}, \textsl{-0\_5V/-0\_5V\_13.txt}, \textsl{+0\_25V/+0\_25V\_13.txt} и
+\textsl{+0\_5V/+0\_5V\_13.txt}. С коррекцией при помощи вспомогательных данных из
+файла \textsl{ZeroLine/ZeroLine\_13.txt}. Набор значений
+$ X = [-0.5, -0.25, 0.25, 0.5] $. Набор значений $ Y_1 $ определяется как интервальная
+мода данных из соответсвующих файлов (изначальные данные обыинтерваливаются с
+$eps = 2^{-5} $). Набор значений $ Y_2 $ определяется как обынтерваленное среднее
+из соответсвующих файлов ($eps = 2^{-5} $).
+
+Начнем с $ Y_1 $. Итоговая выборка:
+\plot{./images/X, (Y1).png}{Исходная интервальная выборка $ X, (Y_1) $}{p:y1}
+
+Точечная линейная регрессия имеет вид:
+\plot{./images/Regression X, (Y1).png}{Точечная линейная регрессия выборки $ X, (Y_1) $}{p:regY1}
+
+Точечные оценки параметров: $ \beta_0 = 0.0, \beta_1 = 0.86236 $.
+
+Построим информационное множество:
+\plot{./images/Inform X, (Y1).png}{Информационное множество выборки $ X, (Y_1) $}{p:infY1}
+
+Интервальные оценки параметров: $ \beta_0 = [-0.01635, 0.00856],
+\beta_1 = [0.82965, 0.89135] $.
+
+Коридор совместных зависимостей:
+\plot{./images/Corridor X, (Y1).png}{Коридор совместных зависимостей выборки $ X, (Y_1) $}{p:corY1}
+
+Теперь $ Y_2 $. Итоговая выборка:
+\plot{./images/X, (Y2).png}{Исходная интервальная выборка $ X, (Y_2) $}{p:y2}
+
+Точечная линейная регрессия имеет вид:
+\plot{./images/Regression X, (Y2).png}{Точечная линейная регрессия выборки $ X, (Y_2) $}{p:regY2}
+
+Точечные оценки параметров: $ \beta_0 = 0.0003, \beta_1 = 0.85377 $.
+
+Построим информационное множество:
+\plot{./images/Inform X, (Y2).png}{Информационное множество выборки $ X, (Y_2) $}{p:infY2}
+
+Интервальные оценки параметров: $ \beta_0 = [-0.02984, 0.03146],
+\beta_1 = [0.78907, 0.91407] $.
+
+Коридор совместных зависимостей:
+\plot{./images/Corridor X, (Y2).png}{Коридор совместных зависимостей выборки $ X, (Y_2) $}{p:corY2}
+
+\section{Выводы}
+\quad Из полученых результатов можно заметить, что оценки выборки $ X, (Y_1) $
+имеют примерно вдвое меньшую неопределенность, чем выборки $ X, (Y_2) $. Для
+обеих выборок точечные оценки параметров модели лежат внутри информационного
+множества, и как следствие, линия регрессии лежит внутри коридора совместных
+зависимостей.
+
+\section{Литература}
+\begin{itemize}
+  \item \href{https://elib.spbstu.ru/dl/2/s20-76.pdf/info}{Баженов А.Н.
+    <<Интервальный анализ. Основы теории и учебные примеры: учебное пособие>>};
+  \item \href{https://elib.spbstu.ru/dl/5/tr/2021/tr21-169.pdf/info}{Баженов
+      А.Н. <<Естественнонаучные и технические применения интервального анализа:
+    учебное пособие>>};
+  \item \href{https://github.com/AlexanderBazhenov/Students}{Баженов А.Н.
+    Репозиторий ``Students'' на GitHub};
+\end{itemize}
+
+\section{Приложения}
+\quad Исходники лабораторной работы выложены на
+\href{https://github.com/MeShootIn/interval-analysis/tree/lab-2}{GitHub}.
+
+\end{document}
