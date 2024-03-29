@@ -1,0 +1,176 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{shorttoc}
+\usepackage{cmap}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\graphicspath{{./images/}}
+
+\definecolor{linkcolor}{HTML}{000000}
+\definecolor{urlcolor}{HTML}{0085FF}
+\hypersetup{pdfstartview=FitH,
+  linkcolor=linkcolor,
+  urlcolor=urlcolor,
+colorlinks=true}
+
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+\renewcommand*\contentsname{Содержание}
+
+\newcommand{\plot}[3]{
+  \begin{figure}[H]
+    \begin{center}
+      \includegraphics[scale=0.6]{#1}
+      \caption{#2}
+      \label{#3}
+    \end{center}
+  \end{figure}
+}
+
+\begin{document}
+\include{title}
+\newpage
+
+\tableofcontents
+\listoffigures
+\newpage
+
+\section{Постановка задачи}
+\quad Провести анализ остатков интервальных измерений.
+
+\section{Теория}
+\subsection{Классификация измерений}
+\quad Измерения можно классифицировать следующим образом.
+Измерения, добавление которых к выборке не приводит к модификации модели, называются \textsl{внутренними}.
+Те, которые изменяют модель, называются \textsl{внешними}.
+Измерения, которые определяют какую-либо границу информационного множества, называются \textsl{граничными}.
+\textsl{Выбросами} называются те измерения, которые делают информационное множество пустым.
+Граничные измерения - подмножество внутренних, выбросы - внешних.
+
+Для удобства анализа взаимоотношения информационных множеств работу с ними заменяют
+на анализ взаимоотношения интересующего интервального измерения и интервального прогнозируемого
+значения модели (коридора совместных значений).
+
+\subsection{Взаимные отношения интервалов наблюдения и прогнозного интервала модели}
+\quad Существует несколько характеристик, определяющих это взаимоотношение.
+
+\textsl{Размахом (плечом)} называется следующее отношение \ref{e:leverage}.
+\begin{equation}
+  l(x, \textbf{y}) = \frac{\Upsilon(x)}{rad(\textbf{y})}
+  \label{e:leverage}
+\end{equation}
+
+\textsl{Относительным остатком} называется отношение \ref{e:residual}.
+\begin{equation}
+  r(x, \textbf{y}) = \frac{mid(\textbf{y}) - mid(\Upsilon(x))}{rad(\textbf{y})}
+  \label{e:residual}
+\end{equation}
+здесь $ x $ - точечное значение, $ \textbf{y} $ - интервальное значение интересующей величины (отклик $ x $),
+$ \Upsilon(x) $ - интервальная оценка интересующей величины (значение коридора совместных значений).
+
+Для внутренних наблюдений выполняется неравенство \ref{e:inner}.
+\begin{equation}
+  |r(x, \textbf{y})| \leq 1 - l(x, \textbf(y))
+  \label{e:inner}
+\end{equation}
+В случае равенства \ref{e:inner} измерение будет граничным.
+
+Выбросы определяются неравенством \ref{e:remainder}
+\begin{equation}
+  |r(x, \textbf{y})| > 1 + l(x, \textbf{y})
+  \label{e:remainder}
+\end{equation}
+
+\section{Реализация}
+\quad Из языка Python 3.12.2 были использованы следующие модули:
+\begin{itemize}
+  \item ``numpy'' --- генерация множества чисел;
+  \item ``matplotlib.pyplot'' --- построение и отображение графиков;
+  \item ``scipy'' --- для выполнения научных и инженерных расчётов;
+  \item ``glob'' --- расширение шаблонов пути в стиле Unix.
+\end{itemize}
+
+\section{Результаты}
+\quad Данные $ S_X $ были взяты из файлов \textsl{data/dataset2/XV\_spN.txt}, \newline
+где $ X \in P = \{-0.45, -0.35, -0.25, -0.15, -0.05, 0.05, 0.15, 0.25, 0.35, 0.45 \} $.
+Набор $ \delta_i $ получен из файла \textsl{data/dataset2/0.0V\_sp443.txt}.
+
+Рассмотрим первую выборку $ Y_1 $. $ Y_1 $ получена следующим образом.
+$ \textbf{y}_i = [\min{S_i}, \max{S_i}]$, $ i \in P $, $ \textbf{y}_i \in Y_1 $.
+\plot{./images/SampleX1}{Первая выборка, $ Y_1 $}{p:sampleX1}
+
+Построим точечную линейную регрессию и коридор совместных значений.
+\plot{./images/InformSetCorridorX1}{Точечная линейная регрессия и коридор совместных значений для $ Y_1 $}{p:informSetCorridorX1}
+
+Построим выборку остатков $ \mathcal{E}_1 $, $ \varepsilon_i = \textbf{y}_i - (\beta_0 + \beta_1 x_i) $,
+$ \varepsilon_i \in \mathcal{E}_1 $.
+
+Выборка $ \mathcal{E}_1 $ и коридор совместных значений для $ \mathcal{E}_1 $ имеют вид.
+\plot{./images/InformSetCorridorRemX1}{Точечная линейная регрессия и коридор совместных значений для $ \mathcal{E}_1 $}{p:informSetCorridorRemX1}
+
+Теперь построим диаграмму статусов для выборки $ \mathcal{E}_1 $.
+По оси $ x $ лежит значение размаха (см. \ref{e:leverage}), по оси $ y $ значение относительного остатка (см. \ref{e:residual}).
+\plot{./images/DiagramStatusX1}{Диаграмма статусов измерений выборки $ \mathcal{E}_1 $}{p:diagramStatusX1}
+
+Для данной выборки $ \mathcal{E}_1 $ и простейшей линейной модели граничными являются
+измерения, соответствующие следующим значениям переменной $ x $: $ [-0.45, -0.35, -0.25, -0.05, 0.35] $.
+Измерение, соответствующее переменной $ x = 0.45 $, возможно, является внешним или также граничным,
+а все остальные измерения внутренние (рис. \ref{p:diagramStatusZoomX1}).
+\plot{./images/DiagramStatusZoomX1}{Диаграмма статусов измерений выборки $ \mathcal{E}_1 $ (Приближеие)}{p:diagramStatusZoomX1}
+
+Для наглядности проведём аналогичные измерения для другой выборки $ Y_2 $.
+$ Y_2 $ получена следующим образом. $ \textbf{y}_i = [median(S_i) - \varepsilon, median(S_i) + \varepsilon] $,
+$ \varepsilon = 25.0 $, $ i \in P $, $ \textbf{y}_i \in Y_2 $.
+
+$ Y_2 $ имеет вид.
+\plot{./images/SampleX2}{Вторая выборка, $ Y_2 $}{p:sampleX2}
+
+Построим точечную линейную регрессию и коридор совместных значений для $ Y_2 $.
+\plot{./images/InformSetCorridorX2}{Точечная линейная регрессия и коридор совместных значений для $ Y_2 $}{p:informSetCorridorX2}
+
+Выборка остатков $ \mathcal{E}_2 $ и коридор совместных значений для $ \mathcal{E}_2 $ имеют вид.
+\plot{./images/InformSetCorridorRemX2}{Точечная линейная регрессия и коридор совместных значений для $ \mathcal{E}_2 $}{p:informSetCorridorRemX2}
+
+Построим диаграмму статусов для $ \mathcal{E}_2 $.
+\plot{./images/DiagramStatusX2}{Диаграмма статусов измерений выборки $ \mathcal{E}_2 $}{p:diagramStatusX2}
+
+Для выборки $ \mathcal{E}_2 $ граничными являются измерения, соответствующие значениям
+переменной $ x \in [-0.45, -0.15, -0.05, 0.35, 0.45] $.
+Остальные являются внутренними.
+\plot{./images/DiagramStatusZoomX2}{Диаграмма статусов измерений выборки $ \mathcal{E}_2 $ (Приближение)}{p:diagramStatusZoomX2}
+
+
+\section{Выводы}
+\quad Из полученных результатов можно заметить следующее. Для первой выборки на
+диаграмме статутов измерений статусы находятся вблизи точки $ (1, 0) $ (рис.
+\ref{p:diagramStatusX1}), в то время как для второй выборки статусы
+расположились дальше от точки $ (1, 0) $, имеют меньшие значения для плеча (см.
+\ref{e:leverage}) и большие по модулю для относительного остатка (см.
+\ref{e:residual}). Это вполне сочетается с тем, как выглядят коридоры совместных
+значений для каждой выборки (рис. \ref{p:informSetCorridorRemX1},
+\ref{p:informSetCorridorRemX2}). Также стоит отметить, что ни для одной выборки
+не было обнаружено выбросов или явных внешних измерений.
+
+\section{Литература}
+\begin{itemize}
+  \item \href{https://elib.spbstu.ru/dl/2/s20-76.pdf/info}{Баженов А.Н.
+    <<Интервальный анализ. Основы теории и учебные примеры: учебное пособие>>};
+  \item \href{https://elib.spbstu.ru/dl/5/tr/2021/tr21-169.pdf/info}{Баженов
+      А.Н. <<Естественнонаучные и технические применения интервального анализа:
+    учебное пособие>>};
+  \item \href{https://github.com/AlexanderBazhenov/Students}{Баженов А.Н.
+    Репозиторий ``Students'' на GitHub};
+\end{itemize}
+
+\section{Приложения}
+\quad Исходники лабораторной работы выложены на
+\href{https://github.com/MeShootIn/interval-analysis/tree/lab-3}{GitHub}.
+
+\end{document}
